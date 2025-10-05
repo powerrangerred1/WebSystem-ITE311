@@ -20,15 +20,10 @@ class UserSeeder extends Seeder
             [
                 'name'     => 'John Doe',
                 'email'    => 'johndoe@example.com',
-                'password' => password_hash('instructor123', PASSWORD_DEFAULT),
-                'role'     => 'instructor',
+                'password' => password_hash('teacher123', PASSWORD_DEFAULT),
+                'role'     => 'teacher',
             ],
-            [
-                'name'     => 'Jane Smith',
-                'email'    => 'janesmith@example.com',
-                'password' => password_hash('instructor123', PASSWORD_DEFAULT),
-                'role'     => 'instructor',
-            ],
+           
             // Students
             [
                 'name'     => 'Student One',
