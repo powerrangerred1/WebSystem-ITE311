@@ -32,8 +32,8 @@
               <?php $oldRole = strtolower((string) old('role')); ?>
               <option value="student" <?= $oldRole === 'student' ? 'selected' : '' ?>>Student</option>
               <option value="teacher" <?= $oldRole === 'teacher' ? 'selected' : '' ?>>Teacher</option>
+              <option value="admin" <?= $oldRole === 'admin' ? 'selected' : '' ?>>Admin</option>
             </select>
-          </div>
 
           <div class="mb-3">
             <label for="password" class="form-label text-light">Password</label>
