@@ -55,4 +55,12 @@ abstract class BaseController extends Controller
 
         // E.g.: $this->session = service('session');
     }
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        // Initialize any properties if needed
+    }
 }

@@ -5,7 +5,7 @@
 <?= $this->section('content') ?>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Announcements</h1>
-        <?php if (session('isLoggedIn') && session('user_role') === 'Admin'): ?>
+        <?php if (session('isLoggedIn') && strtolower(session('role')) === 'admin'): ?>
             <a href="#" class="btn btn-primary">Add New Announcement</a>
         <?php endif; ?>
     </div>
@@ -32,7 +32,7 @@
                                     Posted on: <?= date('F j, Y \a\t g:i A', strtotime($announcement['date_posted'])) ?>
                                 </small>
                             </p>
-                            <?php if (session('isLoggedIn') && session('user_role') === 'Admin'): ?>
+                            <?php if (session('isLoggedIn') && strtolower(session('role')) === 'admin'): ?>
                                 <div class="mt-2">
                                     <button class="btn btn-sm btn-outline-warning me-2">Edit</button>
                                     <button class="btn btn-sm btn-outline-danger">Delete</button>

@@ -56,24 +56,33 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link <?= uri_string() == '' ? 'active' : '' ?>" href="<?= site_url('/') ?>">Home</a>
+            <a class="nav-link" href="<?= site_url('/') ?>">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link <?= uri_string() == 'about' ? 'active' : '' ?>" href="<?= site_url('about') ?>">About</a>
+            <a class="nav-link" href="<?= site_url('about') ?>">About</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link <?= uri_string() == 'contact' ? 'active' : '' ?>" href="<?= site_url('contact') ?>">Contact</a>
+            <a class="nav-link" href="<?= site_url('contact') ?>">Contact</a>
           </li>
+          <?php if (session('isLoggedIn')): ?>
           <li class="nav-item">
-            <a class="nav-link <?= uri_string() == 'announcements' ? 'active' : '' ?>" href="<?= site_url('announcements') ?>">Announcements</a>
+            <a class="nav-link" href="<?= site_url('announcements') ?>">Announcements</a>
           </li>
+          <?php endif; ?>
           <?php if (!session('isLoggedIn')): ?>
           <li class="nav-item">
-            <a class="nav-link <?= uri_string() == 'login' ? 'active' : '' ?>" href="<?= site_url('login') ?>">Login</a>
+            <a class="nav-link" href="<?= site_url('login') ?>">Login</a>
           </li>
           <?php else: ?>
+          <?php $userRole = strtolower(session('role')); ?>
           <li class="nav-item">
-            <a class="nav-link <?= uri_string() == 'dashboard' ? 'active' : '' ?>" href="<?= site_url('dashboard') ?>">Dashboard</a>
+            <?php if ($userRole === 'student'): ?>
+              <a class="nav-link" href="<?= site_url('dashboard') ?>">Dashboard</a>
+            <?php elseif ($userRole === 'teacher'): ?>
+              <a class="nav-link" href="<?= site_url('teacher/dashboard') ?>">Dashboard</a>
+            <?php elseif ($userRole === 'admin'): ?>
+              <a class="nav-link" href="<?= site_url('admin/dashboard') ?>">Dashboard</a>
+            <?php endif; ?>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="<?= site_url('logout') ?>">Logout</a>

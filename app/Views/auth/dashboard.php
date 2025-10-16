@@ -3,7 +3,10 @@
 <?= $this->section('content') ?>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mb-0">Dashboard</h1>
-        <a href="<?= base_url('logout') ?>" class="btn btn-outline-danger">Logout</a>
+        <div>
+            <a href="/announcements" class="btn btn-primary me-2">View Announcements</a>
+            <a href="<?= base_url('logout') ?>" class="btn btn-outline-danger">Logout</a>
+        </div>
     </div>
 
     <?php if (session()->getFlashdata('success')): ?>
@@ -21,6 +24,41 @@
     <div class="alert alert-info" role="alert">
         Welcome, <?= esc(session('user_name')) ?>!<br>
         <small class="text-muted">Email: <?= esc(session('user_email')) ?> | Role: <?= esc($role) ?></small>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Enrolled Courses</h5>
+                    <h3><?= count($enrolledCourses ?? []) ?></h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Completed</h5>
+                    <h3>0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">In Progress</h5>
+                    <h3><?= count($enrolledCourses ?? []) ?></h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Certificates</h5>
+                    <h3>0</h3>
+                </div>
+            </div>
+        </div>
     </div>
 
     <?php $roleLower = strtolower((string) $role); ?>
@@ -125,49 +163,70 @@
             <div class="card-header bg-white fw-bold">Enrolled Courses</div>
             <div class="card-body">
                 <?php if (!empty($enrolledCourses)): ?>
-                    <ul class="mb-0">
+                    <div class="list-group list-group-flush">
                         <?php foreach ($enrolledCourses as $c): ?>
-                            <li><?= esc($c['title'] ?? 'Untitled') ?></li>
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1"><?= esc($c['title'] ?? 'Untitled') ?></h6>
+                                    <?php if (isset($c['description'])): ?>
+                                        <small class="text-muted">Enrolled</small>
+                                    <?php endif; ?>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">Active</span>
+                            </a>
                         <?php endforeach; ?>
-                    </ul>
+                    </div>
                 <?php else: ?>
-                    <div class="text-muted">No enrollments yet.</div>
+                    <div class="text-muted">No enrollments yet. Check out available courses below!</div>
                 <?php endif; ?>
             </div>
         </div>
 
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white fw-bold">Upcoming Deadlines</div>
-                    <div class="card-body">
-                        <?php if (!empty($upcomingDeadlines)): ?>
-                            <ul class="mb-0">
-                                <?php foreach ($upcomingDeadlines as $a): ?>
-                                    <li><?= esc($a['title'] ?? '') ?> — <?= esc($a['due_date'] ?? '') ?> (<?= esc($a['course_title'] ?? '') ?>)</li>
-                                <?php endforeach; ?>
-                            </ul>
-                        <?php else: ?>
-                            <div class="text-muted">No upcoming deadlines.</div>
-                        <?php endif; ?>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold">Available Courses</div>
+            <div class="card-body">
+                <?php
+                // Get available courses (not enrolled)
+                $db = \Config\Database::connect();
+                $allCourses = [];
+                $enrolledIds = array_column($enrolledCourses, 'id');
+                try {
+                    $allCourses = $db->table('courses')
+                        ->select('id, title, description')
+                        ->get()
+                        ->getResultArray();
+                    $availableCourses = array_filter($allCourses, function($course) use ($enrolledIds) {
+                        return !in_array($course['id'], $enrolledIds);
+                    });
+                } catch (\Throwable $e) {
+                    $availableCourses = [];
+                }
+                ?>
+
+                <?php if (!empty($availableCourses)): ?>
+                    <div class="row g-3">
+                        <?php foreach ($availableCourses as $course): ?>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <h6 class="card-title mb-2"><?= esc($course['title'] ?? 'Untitled') ?></h6>
+                                        <?php if (isset($course['description'])): ?>
+                                            <p class="card-text text-muted small mb-3">
+                                                <?= esc(substr($course['description'], 0, 100)) ?><?= strlen($course['description']) > 100 ? '...' : '' ?>
+                                            </p>
+                                        <?php endif; ?>
+                                        <button class="btn btn-primary btn-sm enroll-btn"
+                                                data-course-id="<?= esc($course['id']) ?>">
+                                            Enroll Now
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white fw-bold">Recent Grades</div>
-                    <div class="card-body">
-                        <?php if (!empty($recentGrades)): ?>
-                            <ul class="mb-0">
-                                <?php foreach ($recentGrades as $g): ?>
-                                    <li><?= esc($g['assignment_title'] ?? '') ?> — <?= esc($g['score'] ?? '') ?> (<?= esc($g['course_title'] ?? '') ?>)</li>
-                                <?php endforeach; ?>
-                            </ul>
-                        <?php else: ?>
-                            <div class="text-muted">No grades yet.</div>
-                        <?php endif; ?>
-                    </div>
-                </div>
+                <?php else: ?>
+                    <div class="text-muted">No available courses. All courses are enrolled!</div>
+                <?php endif; ?>
             </div>
         </div>
     <?php else: ?>
@@ -177,4 +236,113 @@
             </div>
         </div>
     <?php endif; ?>
+
+    <!-- Include jQuery if not already in your template (add this before closing body in template.php or here) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <?php if ($roleLower === 'student'): ?>
+    <script>
+        $(document).ready(function() {
+            // AJAX Enrollment Script
+            $('.enroll-btn').on('click', function(e) {
+                e.preventDefault(); // Prevent default button behavior
+
+                var $btn = $(this);
+                var courseId = $btn.data('course-id');
+                var $card = $btn.closest('.card'); // For hiding the card if needed
+
+                // Show loading state
+                $btn.prop('disabled', true).text('Enrolling...');
+
+                // Prepare data (include CSRF if enabled)
+                var postData = {
+                    course_id: courseId,
+                    '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                };
+
+                $.post('<?= base_url('course/enroll') ?>', postData)
+                    .done(function(response) {
+                        if (response.success) {
+                            // Show success toast
+                            var toastMessage = response.message || 'Successfully enrolled!';
+                            var $toast = $('#enrollToast');
+                            $toast.find('.toast-body').text(toastMessage);
+                            $toast.toast('show');
+
+                            // Hide/disable the enroll button and mark as enrolled
+                            $btn.hide().after('<span class="badge bg-success ms-2">Enrolled!</span>');
+
+                            // Dynamically update Enrolled Courses list
+                            var courseTitle = $btn.closest('.card-body').find('.card-title').text().trim();
+                            var courseDescription = $btn.closest('.card-body').find('.card-text').text().trim();
+
+                            // Get the enrolled courses card body
+                            var $enrolledCardBody = $('.card-header:contains("Enrolled Courses")').next('.card-body');
+                            var $enrolledList = $enrolledCardBody.find('.list-group');
+                            if ($enrolledList.length === 0) {
+                                // Remove no enrollments message
+                                $enrolledCardBody.find('.text-muted').remove();
+                                // Create list-group
+                                $enrolledList = $('<div class="list-group list-group-flush"></div>');
+                                $enrolledCardBody.append($enrolledList);
+                            }
+
+                            // Create new item
+                            var newItem = `
+                                <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">${courseTitle}</h6>
+                                        <small class="text-muted">Enrolled</small>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Active</span>
+                                </a>
+                            `;
+
+                            // Prepend to list
+                            $enrolledList.prepend(newItem);
+
+                            // Remove the enrolled course from available courses
+                            $card.remove();
+                        } else {
+                            // Show error toast
+                            var errorMessage = response.message || 'Enrollment failed.';
+                            var $errorToast = $('#errorToast');
+                            $errorToast.find('.toast-body').text(errorMessage);
+                            $errorToast.toast('show');
+                            $btn.prop('disabled', false).text('Enroll Now');
+                        }
+                    })
+                    .fail(function() {
+                        // Show error toast
+                        var $errorToast = $('#errorToast');
+                        $errorToast.find('.toast-body').text('Request failed. Please try again.');
+                        $errorToast.toast('show');
+                        $btn.prop('disabled', false).text('Enroll Now');
+                    });
+            });
+        });
+    </script>
+    <?php endif; ?>
+
+    <!-- Success Toast -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="enrollToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
+            <div class="toast-header">
+                <strong class="me-auto">Enrollment Success</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body"></div>
+        </div>
+    </div>
+
+    <!-- Error Toast -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+        <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="5000">
+            <div class="toast-header bg-danger text-white">
+                <strong class="me-auto">Enrollment Error</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body"></div>
+        </div>
+    </div>
 <?= $this->endSection() ?>

@@ -50,7 +50,7 @@ class Auth extends Controller
                     if ($insertResult) {
                         log_message('info', 'User inserted successfully with ID: ' . $insertResult);
                         $session->setFlashdata('register_success', 'Registration successful. Please login.');
-                        return redirect()->to(base_url('login'));
+                        return redirect()->to(base_url('/login'));
                     } else {
                         // Get the last error for debugging
                         $errors = $model->errors();
@@ -125,8 +125,24 @@ class Auth extends Controller
                         $session->set($sessionData);
                         $session->setFlashdata('success', 'Welcome, ' . $userName . '!');
 
-                        // Unified dashboard redirect
-                        return redirect()->to('/dashboard');
+                        // Role-based redirection
+                        $userRole = strtolower($user['role'] ?? 'student');
+
+                        // Handle instructor as teacher
+                        if ($userRole === 'instructor') {
+                            $userRole = 'teacher';
+                        }
+
+                        switch ($userRole) {
+                            case 'student':
+                                return redirect()->to(base_url('announcements'));
+                            case 'teacher':
+                                return redirect()->to(base_url('teacher/dashboard'));
+                            case 'admin':
+                                return redirect()->to(base_url('admin/dashboard'));
+                            default:
+                                return redirect()->to(base_url('announcements'));
+                        }
                     } else {
                         $session->setFlashdata('login_error', 'Invalid email or password.');
                     }
@@ -148,7 +164,7 @@ class Auth extends Controller
     {
         $session = session();
         $session->destroy();
-        return redirect()->to('login');
+            return redirect()->to(base_url('/login'));
     }
 
     public function dashboard()
@@ -158,7 +174,7 @@ class Auth extends Controller
         // Check if user is logged in
         if (!$session->get('isLoggedIn')) {
             $session->setFlashdata('login_error', 'Please login to access the dashboard.');
-            return redirect()->to('login');
+            return redirect()->to(base_url('/login'));
         }
         
         $role = strtolower((string) $session->get('role'));
@@ -212,7 +228,7 @@ class Auth extends Controller
                     $enrolledCourses = $db->table('enrollments e')
                         ->select('c.id, c.title, c.description, c.created_at')
                         ->join('courses c', 'c.id = e.course_id', 'left')
-                        ->where('e.student_id', $userId)
+                        ->where('e.user_id', $userId)
                         ->orderBy('c.title', 'ASC')
                         ->get()
                         ->getResultArray();
@@ -236,7 +252,7 @@ class Auth extends Controller
                         ->select('g.score, g.created_at, a.title as assignment_title, c.title as course_title')
                         ->join('assignments a', 'a.id = g.assignment_id', 'left')
                         ->join('courses c', 'c.id = a.course_id', 'left')
-                        ->where('g.student_id', $userId)
+                        ->where('g.user_id', $userId)
                         ->orderBy('g.created_at', 'DESC')
                         ->limit(5)
                         ->get()
