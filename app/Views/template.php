@@ -64,6 +64,9 @@
           <li class="nav-item">
             <a class="nav-link <?= uri_string() == 'contact' ? 'active' : '' ?>" href="<?= site_url('contact') ?>">Contact</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link <?= uri_string() == 'announcements' ? 'active' : '' ?>" href="<?= site_url('announcements') ?>">Announcements</a>
+          </li>
           <?php if (!session('isLoggedIn')): ?>
           <li class="nav-item">
             <a class="nav-link <?= uri_string() == 'login' ? 'active' : '' ?>" href="<?= site_url('login') ?>">Login</a>
